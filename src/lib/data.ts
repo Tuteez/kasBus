@@ -121,6 +121,33 @@ export async function getAttendanceForEvents(eventIds: string[]): Promise<Attend
   return (data as AttendanceRow[]).map(toAttendance);
 }
 
+export class DuplicatePlayerError extends Error {}
+
+export async function updateAttendanceEntry(
+  id: string,
+  eventId: string,
+  playerName: string,
+  response: AttendanceResponse,
+): Promise<void> {
+  const { error } = await getSupabase()
+    .from("attendance")
+    .update({ player_name: playerName, response, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("event_id", eventId);
+  if (error?.code === "23505") throw new DuplicatePlayerError();
+  if (error) throw error;
+}
+
+export async function deleteAttendanceEntry(id: string, eventId: string): Promise<void> {
+  const { error } = await getSupabase().from("attendance").delete().eq("id", id).eq("event_id", eventId);
+  if (error) throw error;
+}
+
+export async function clearAttendance(eventId: string): Promise<void> {
+  const { error } = await getSupabase().from("attendance").delete().eq("event_id", eventId);
+  if (error) throw error;
+}
+
 /** Distinct player names that have ever responded, using the most recent spelling. */
 export async function getKnownPlayers(): Promise<string[]> {
   const { data, error } = await getSupabase()

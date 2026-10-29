@@ -3,11 +3,27 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AdminAttendanceManager } from "@/components/admin-attendance-manager";
+import { LowAttendanceWarning } from "@/components/low-attendance-warning";
 import { NameForm } from "@/components/name-form";
-import { setAttendanceAction } from "@/app/actions";
+import {
+  clearAttendanceAction,
+  deleteAttendanceEntryAction,
+  setAttendanceAction,
+  updateAttendanceEntryAction,
+  type FormState,
+} from "@/app/actions";
+import { useAdminMode } from "@/hooks/use-admin-mode";
 import { useAutoRefresh } from "@/hooks/use-auto-refresh";
 import { usePlayerName } from "@/hooks/use-player-name";
-import { applyResponse, findResponse, playerKey, playersGenitive, summarizeAttendance } from "@/lib/attendance";
+import {
+  applyAttendanceChange,
+  findResponse,
+  playerKey,
+  playersGenitive,
+  summarizeAttendance,
+  type AttendanceChange,
+} from "@/lib/attendance";
 import { STATUS_STYLES } from "@/lib/status";
 import type { Attendance, AttendanceResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -17,8 +33,6 @@ const RESPONSE_BUTTONS: { value: AttendanceResponse; label: string; active: stri
   { value: "MAYBE", label: "❓ Galbūt", active: "bg-amber-500 text-white border-amber-500 hover:bg-amber-500/90" },
   { value: "NO", label: "❌ Nedalyvausiu", active: "bg-red-600 text-white border-red-600 hover:bg-red-600/90" },
 ];
-
-type OptimisticUpdate = { playerName: string; response: AttendanceResponse };
 
 export function AttendancePanel({
   eventId,
@@ -32,14 +46,15 @@ export function AttendancePanel({
   knownPlayers: string[];
 }) {
   const { playerName, loaded: nameLoaded, savePlayerName } = usePlayerName();
+  const { isAdmin, setAdmin } = useAdminMode();
   const [editingName, setEditingName] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [adminError, setAdminError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const [optimisticAttendance, applyOptimistic] = useOptimistic(
     attendance,
-    (current: Attendance[], update: OptimisticUpdate) =>
-      applyResponse(current, eventId, update.playerName, update.response),
+    (current: Attendance[], change: AttendanceChange) => applyAttendanceChange(current, eventId, change),
   );
 
   useAutoRefresh();
@@ -57,9 +72,18 @@ export function AttendancePanel({
     if (!playerName) return;
     setError(null);
     startTransition(async () => {
-      applyOptimistic({ playerName, response });
+      applyOptimistic({ type: "set", playerName, response });
       const result = await setAttendanceAction(eventId, playerName, response);
       if (result.error) setError(result.error);
+    });
+  }
+
+  function runAdmin(change: AttendanceChange, action: () => Promise<FormState>) {
+    setAdminError(null);
+    startTransition(async () => {
+      applyOptimistic(change);
+      const result = await action();
+      if (result.error) setAdminError(result.error);
     });
   }
 
@@ -124,6 +148,8 @@ export function AttendancePanel({
         )}
       </div>
 
+      <LowAttendanceWarning yes={summary.names.YES.length} className="py-3 text-center text-base" />
+
       <div className="grid grid-cols-2 gap-3">
         <CountTile label="✅ Dalyvaus" count={summary.names.YES.length} />
         <CountTile label="❓ Galbūt" count={summary.names.MAYBE.length} />
@@ -141,6 +167,28 @@ export function AttendancePanel({
           )}
         </CardContent>
       </Card>
+      {isAdmin && (
+        <>
+          {adminError && (
+            <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {adminError}
+            </p>
+          )}
+          <AdminAttendanceManager
+            attendance={optimisticAttendance}
+            onEdit={(entry, name, response) =>
+              runAdmin({ type: "edit", id: entry.id, playerName: name, response }, () =>
+                updateAttendanceEntryAction(entry.id, eventId, name, response),
+              )
+            }
+            onDelete={(entry) =>
+              runAdmin({ type: "delete", id: entry.id }, () => deleteAttendanceEntryAction(entry.id, eventId))
+            }
+            onClear={() => runAdmin({ type: "clear" }, () => clearAttendanceAction(eventId))}
+            onExitAdmin={() => setAdmin(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

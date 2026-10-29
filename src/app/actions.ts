@@ -73,6 +73,53 @@ export async function deleteEventAction(id: string): Promise<FormState> {
   return {};
 }
 
+function revalidateAttendance(eventId: string) {
+  revalidatePath("/");
+  revalidatePath(`/event/${eventId}`);
+}
+
+export async function updateAttendanceEntryAction(
+  id: string,
+  eventId: string,
+  rawName: string,
+  response: AttendanceResponse,
+): Promise<FormState> {
+  const playerName = normalizePlayerName(rawName);
+  if (!playerName || playerName.length > 40) return { error: "Netinkamas vardas." };
+  if (!RESPONSES.includes(response)) return { error: "Netinkamas atsakymas." };
+  try {
+    await data.updateAttendanceEntry(id, eventId, playerName, response);
+  } catch (e) {
+    if (e instanceof data.DuplicatePlayerError) return { error: `„${playerName}“ jau yra sąraše.` };
+    console.error(e);
+    return { error: "Nepavyko išsaugoti. Bandykite dar kartą." };
+  }
+  revalidateAttendance(eventId);
+  return {};
+}
+
+export async function deleteAttendanceEntryAction(id: string, eventId: string): Promise<FormState> {
+  try {
+    await data.deleteAttendanceEntry(id, eventId);
+  } catch (e) {
+    console.error(e);
+    return { error: "Nepavyko ištrinti. Bandykite dar kartą." };
+  }
+  revalidateAttendance(eventId);
+  return {};
+}
+
+export async function clearAttendanceAction(eventId: string): Promise<FormState> {
+  try {
+    await data.clearAttendance(eventId);
+  } catch (e) {
+    console.error(e);
+    return { error: "Nepavyko išvalyti. Bandykite dar kartą." };
+  }
+  revalidateAttendance(eventId);
+  return {};
+}
+
 export async function setAttendanceAction(
   eventId: string,
   rawName: string,
@@ -90,7 +137,6 @@ export async function setAttendanceAction(
     console.error(e);
     return { error: "Nepavyko išsaugoti. Bandykite dar kartą." };
   }
-  revalidatePath("/");
-  revalidatePath(`/event/${eventId}`);
+  revalidateAttendance(eventId);
   return {};
 }

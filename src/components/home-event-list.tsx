@@ -12,6 +12,7 @@ import { useAutoRefresh } from "@/hooks/use-auto-refresh";
 import { usePlayerName } from "@/hooks/use-player-name";
 import { applyResponse, findResponse, playersGenitive, summarizeAttendance } from "@/lib/attendance";
 import { STATUS_STYLES } from "@/lib/status";
+import { LowAttendanceWarning } from "@/components/low-attendance-warning";
 import { formatShortDate, formatTime } from "@/lib/time";
 import { EVENT_TYPE_LABELS, type Attendance, type AttendanceResponse, type TeamEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,8 @@ function HomeEventCard({
               : `Trūksta dar ${summary.missingPlayers} ${playersGenitive(summary.missingPlayers)}`}
           </span>
         </div>
+
+        <LowAttendanceWarning yes={summary.names.YES.length} className="py-1.5" />
 
         <dl className="grid grid-cols-4 gap-2 text-center">
           <CountCell emoji="✅" label="Dalyvaus" count={summary.names.YES.length} />

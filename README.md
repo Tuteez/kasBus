@@ -59,11 +59,20 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shad
 - **Home page cards**: each upcoming event shows its status, the missing-player count,
   ✅/❓/❌/⏳ totals, your own answer (for example "✅ Tu dalyvausi" or "⏳ Neatsakei") and one-tap
   ✅/❓/❌ buttons that update instantly. Names appear only on the event page.
+- **Low attendance warning**: when fewer than 5 players have said YES, the home cards and the
+  event page show "⚠️ Kol kas tik N patvirtinimai" (or "⚠️ Kol kas nėra patvirtinimų").
+- **Admin mode**: opening `/admin` sets `kasbus.admin=1` in that browser's localStorage. Event
+  pages then show "🛠️ Atsakymų valdymas", where you can rename a player, change a response
+  (✏️ Redaguoti), delete a response (🗑️ Ištrinti) or clear all of an event's responses
+  (🧹 Išvalyti visus atsakymus). Destructive actions ask for confirmation, and counts update
+  immediately. To leave admin mode, use "Išjungti admin režimą". This only hides or shows the
+  controls; it is not security.
 - **Time zone**: all dates are entered and shown in `Europe/Vilnius`.
 
 ## Known MVP limitations
 
-- `/admin` is **not protected**. Anyone who knows the URL can create, edit or delete events.
+- `/admin` is **not protected**. Anyone who knows the URL can create, edit or delete events and
+  manage attendance (the admin-mode controls only hide or show buttons; the actions themselves are open).
   This follows the "no authentication" MVP requirement.
 - Players are identified only by the name they type. Anyone can answer under any name.
 - If a player changes their name, their earlier responses stay under the old name.

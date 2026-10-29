@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { DeleteEventButton } from "@/components/delete-event-button";
+import { AdminModeMarker } from "@/hooks/use-admin-mode";
 import { listEvents } from "@/lib/data";
 import { formatShortDate, formatTime } from "@/lib/time";
 import { EVENT_TYPE_LABELS, type TeamEvent } from "@/lib/types";
@@ -25,6 +26,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AdminModeMarker />
       <header className="flex flex-col gap-4">
         <div>
           <Link href="/" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
