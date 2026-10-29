@@ -56,6 +56,8 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shad
   event before but have not answered this one.
 - **Status**: `YES >= min` → 🟢 Susirenkam. `YES + MAYBE >= min` → 🟡 Trūksta žaidėjų
   ("Trūksta dar X žaidėjų"). Otherwise → 🔴 Nesusirenkam.
+- **Home page cards**: each upcoming event shows its status, the missing-player count and
+  ✅/❓/❌/⏳ totals. Names appear only on the event page.
 - **Time zone**: all dates are entered and shown in `Europe/Vilnius`.
 
 ## Known MVP limitations

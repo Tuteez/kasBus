@@ -111,6 +111,16 @@ export async function getAttendance(eventId: string): Promise<Attendance[]> {
   return (data as AttendanceRow[]).map(toAttendance);
 }
 
+export async function getAttendanceForEvents(eventIds: string[]): Promise<Attendance[]> {
+  if (eventIds.length === 0) return [];
+  const { data, error } = await getSupabase()
+    .from("attendance")
+    .select("id,event_id,player_name,response,updated_at")
+    .in("event_id", eventIds);
+  if (error) throw error;
+  return (data as AttendanceRow[]).map(toAttendance);
+}
+
 /** Distinct player names that have ever responded, using the most recent spelling. */
 export async function getKnownPlayers(): Promise<string[]> {
   const { data, error } = await getSupabase()

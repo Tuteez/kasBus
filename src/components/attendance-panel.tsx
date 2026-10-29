@@ -12,8 +12,8 @@ import {
   playerKey,
   playersGenitive,
   summarizeAttendance,
-  type EventStatus,
 } from "@/lib/attendance";
+import { STATUS_STYLES } from "@/lib/status";
 import type { Attendance, AttendanceResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -25,12 +25,6 @@ const RESPONSE_BUTTONS: { value: AttendanceResponse; label: string; active: stri
   { value: "MAYBE", label: "❓ Galbūt", active: "bg-amber-500 text-white border-amber-500 hover:bg-amber-500/90" },
   { value: "NO", label: "❌ Nedalyvausiu", active: "bg-red-600 text-white border-red-600 hover:bg-red-600/90" },
 ];
-
-const STATUS_STYLES: Record<EventStatus, { label: string; className: string }> = {
-  GOING: { label: "🟢 Susirenkam", className: "border-green-200 bg-green-50 text-green-900" },
-  SHORT: { label: "🟡 Trūksta žaidėjų", className: "border-amber-200 bg-amber-50 text-amber-900" },
-  CANCELLED: { label: "🔴 Nesusirenkam", className: "border-red-200 bg-red-50 text-red-900" },
-};
 
 type OptimisticUpdate = { playerName: string; response: AttendanceResponse };
 
@@ -161,7 +155,7 @@ export function AttendancePanel({
         </CardContent>
       </Card>
 
-      <div className={cn("rounded-xl border px-4 py-4 text-center", status.className)} aria-live="polite">
+      <div className={cn("rounded-xl border px-4 py-4 text-center", status.banner)} aria-live="polite">
         <p className="text-xl font-bold">{status.label}</p>
         {summary.status === "SHORT" && (
           <p className="mt-1 text-base">
