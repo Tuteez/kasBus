@@ -60,6 +60,26 @@ export function summarizeAttendance(
   };
 }
 
+/** Replaces (or adds) one player's response; used for optimistic UI updates. */
+export function applyResponse(
+  current: Attendance[],
+  eventId: string,
+  playerName: string,
+  response: AttendanceResponse,
+): Attendance[] {
+  const key = playerKey(playerName);
+  return [
+    ...current.filter((a) => playerKey(a.playerName) !== key),
+    { id: `optimistic-${key}`, eventId, playerName, response, updatedAt: new Date().toISOString() },
+  ];
+}
+
+export function findResponse(attendance: Attendance[], playerName: string | null): AttendanceResponse | undefined {
+  if (!playerName) return undefined;
+  const key = playerKey(playerName);
+  return attendance.find((a) => playerKey(a.playerName) === key)?.response;
+}
+
 /** Lithuanian genitive after "trūksta": 1 žaidėjo, 2 žaidėjų, 21 žaidėjo, 11 žaidėjų. */
 export function playersGenitive(n: number): string {
   return n % 10 === 1 && n % 100 !== 11 ? "žaidėjo" : "žaidėjų";

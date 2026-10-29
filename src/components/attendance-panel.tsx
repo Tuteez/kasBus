@@ -1,24 +1,16 @@
 "use client";
 
-import { useEffect, useOptimistic, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useOptimistic, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NameForm } from "@/components/name-form";
 import { setAttendanceAction } from "@/app/actions";
-import {
-  normalizePlayerName,
-  playerKey,
-  playersGenitive,
-  summarizeAttendance,
-} from "@/lib/attendance";
+import { useAutoRefresh } from "@/hooks/use-auto-refresh";
+import { usePlayerName } from "@/hooks/use-player-name";
+import { applyResponse, findResponse, playerKey, playersGenitive, summarizeAttendance } from "@/lib/attendance";
 import { STATUS_STYLES } from "@/lib/status";
 import type { Attendance, AttendanceResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const NAME_STORAGE_KEY = "kasbus.playerName";
-const REFRESH_INTERVAL_MS = 10_000;
 
 const RESPONSE_BUTTONS: { value: AttendanceResponse; label: string; active: string }[] = [
   { value: "YES", label: "✅ Dalyvausiu", active: "bg-green-600 text-white border-green-600 hover:bg-green-600/90" },
@@ -39,57 +31,25 @@ export function AttendancePanel({
   attendance: Attendance[];
   knownPlayers: string[];
 }) {
-  const router = useRouter();
-  const [playerName, setPlayerName] = useState<string | null>(null);
-  const [nameLoaded, setNameLoaded] = useState(false);
+  const { playerName, loaded: nameLoaded, savePlayerName } = usePlayerName();
   const [editingName, setEditingName] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const [optimisticAttendance, applyOptimistic] = useOptimistic(
     attendance,
-    (current: Attendance[], update: OptimisticUpdate): Attendance[] => {
-      const key = playerKey(update.playerName);
-      const others = current.filter((a) => playerKey(a.playerName) !== key);
-      return [
-        ...others,
-        {
-          id: `optimistic-${key}`,
-          eventId,
-          playerName: update.playerName,
-          response: update.response,
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-    },
+    (current: Attendance[], update: OptimisticUpdate) =>
+      applyResponse(current, eventId, update.playerName, update.response),
   );
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(NAME_STORAGE_KEY);
-    if (stored) setPlayerName(stored);
-    setNameLoaded(true);
-  }, []);
-
-  // Poll so everyone sees other players' responses without reloading.
-  useEffect(() => {
-    const refresh = () => {
-      if (document.visibilityState === "visible") router.refresh();
-    };
-    const timer = window.setInterval(refresh, REFRESH_INTERVAL_MS);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, [router]);
+  useAutoRefresh();
 
   const summary = summarizeAttendance(optimisticAttendance, knownPlayers, minimumPlayers);
   const myKey = playerName ? playerKey(playerName) : null;
-  const myResponse = optimisticAttendance.find((a) => playerKey(a.playerName) === myKey)?.response;
+  const myResponse = findResponse(optimisticAttendance, playerName);
 
   function saveName(name: string) {
-    window.localStorage.setItem(NAME_STORAGE_KEY, name);
-    setPlayerName(name);
+    savePlayerName(name);
     setEditingName(false);
   }
 
@@ -182,52 +142,6 @@ export function AttendancePanel({
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function NameForm({
-  initialName,
-  onSubmit,
-  onCancel,
-}: {
-  initialName: string;
-  onSubmit: (name: string) => void;
-  onCancel?: () => void;
-}) {
-  const [value, setValue] = useState(initialName);
-  const name = normalizePlayerName(value);
-
-  return (
-    <form
-      className="flex flex-col gap-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (name) onSubmit(name);
-      }}
-    >
-      <Label htmlFor="playerName" className="text-lg font-semibold">
-        Įveskite savo vardą
-      </Label>
-      <Input
-        id="playerName"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        maxLength={40}
-        autoComplete="given-name"
-        autoCapitalize="words"
-        autoFocus
-        placeholder="Pvz., Maksim"
-        className="h-14 text-lg"
-      />
-      <Button type="submit" disabled={!name} className="h-14 text-lg">
-        Patvirtinti
-      </Button>
-      {onCancel && (
-        <Button type="button" variant="ghost" className="h-12 text-base" onClick={onCancel}>
-          Atšaukti
-        </Button>
-      )}
-    </form>
   );
 }
 

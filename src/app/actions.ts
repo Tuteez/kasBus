@@ -90,6 +90,7 @@ export async function setAttendanceAction(
     console.error(e);
     return { error: "Nepavyko išsaugoti. Bandykite dar kartą." };
   }
+  revalidatePath("/");
   revalidatePath(`/event/${eventId}`);
   return {};
 }
