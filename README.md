@@ -59,8 +59,6 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shad
 - **Home page cards**: each upcoming event shows its status, the missing-player count,
   ✅/❓/❌/⏳ totals, your own answer (for example "✅ Tu dalyvausi" or "⏳ Neatsakei") and one-tap
   ✅/❓/❌ buttons that update instantly. Names appear only on the event page.
-- **Low attendance warning**: when fewer than 5 players have said YES, the home cards and the
-  event page show "⚠️ Kol kas tik N patvirtinimai" (or "⚠️ Kol kas nėra patvirtinimų").
 - **Admin mode**: opening `/admin` sets `kasbus.admin=1` in that browser's localStorage. Event
   pages then show "🛠️ Atsakymų valdymas", where you can rename a player, change a response
   (✏️ Redaguoti), delete a response (🗑️ Ištrinti) or clear all of an event's responses

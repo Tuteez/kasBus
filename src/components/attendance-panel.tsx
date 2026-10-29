@@ -4,7 +4,6 @@ import { useOptimistic, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdminAttendanceManager } from "@/components/admin-attendance-manager";
-import { LowAttendanceWarning } from "@/components/low-attendance-warning";
 import { NameForm } from "@/components/name-form";
 import {
   clearAttendanceAction,
@@ -147,8 +146,6 @@ export function AttendancePanel({
           </p>
         )}
       </div>
-
-      <LowAttendanceWarning yes={summary.names.YES.length} className="py-3 text-center text-base" />
 
       <div className="grid grid-cols-2 gap-3">
         <CountTile label="✅ Dalyvaus" count={summary.names.YES.length} />
