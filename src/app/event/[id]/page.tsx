@@ -25,7 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventPage({ params }: Props) {
   const { id } = await params;
-  const [event, attendance, knownPlayers] = await Promise.all([getEvent(id), getAttendance(id), getKnownPlayers()]);
+  const [event, attendance, knownPlayers] = await Promise.all([
+    getEvent(id),
+    getAttendance(id),
+    getKnownPlayers({ excludeEventId: id }),
+  ]);
   if (!event) notFound();
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`;

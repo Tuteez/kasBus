@@ -148,13 +148,19 @@ export async function clearAttendance(eventId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Distinct player names that have ever responded, using the most recent spelling. */
-export async function getKnownPlayers(): Promise<string[]> {
-  const { data, error } = await getSupabase()
+/**
+ * Distinct player names that have ever responded, using the most recent spelling.
+ * Pass `excludeEventId` to ignore that event's own rows, so client-side edits/deletes
+ * on the event can't leave stale names in its "Neatsakė" list.
+ */
+export async function getKnownPlayers(options: { excludeEventId?: string } = {}): Promise<string[]> {
+  let query = getSupabase()
     .from("attendance")
     .select("player_name,updated_at")
     .order("updated_at", { ascending: false })
     .limit(5000);
+  if (options.excludeEventId) query = query.neq("event_id", options.excludeEventId);
+  const { data, error } = await query;
   if (error) throw error;
 
   const byKey = new Map<string, string>();

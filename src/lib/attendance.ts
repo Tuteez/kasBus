@@ -29,8 +29,9 @@ export function calculateStatus(
 }
 
 /**
- * `knownPlayers` is every name that has ever responded to any event; there is no
- * roster table, so "Neatsakė" means known players without a response to this event.
+ * There is no roster table, so "Neatsakė" means `knownPlayers` without a response to this event.
+ * `knownPlayers` may include or exclude this event's own responders: they are filtered out
+ * either way, but excluding them keeps optimistic deletes/renames exact.
  */
 export function summarizeAttendance(
   attendance: Attendance[],
