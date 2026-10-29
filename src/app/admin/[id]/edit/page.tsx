@@ -28,7 +28,6 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           type: event.type,
           dateTimeLocal: toLocalInputValue(event.dateTime),
           location: event.location,
-          minimumPlayers: event.minimumPlayers,
           notes: event.notes ?? "",
         }}
       />

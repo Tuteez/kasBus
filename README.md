@@ -25,7 +25,7 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shad
 
 1. Create a Supabase project.
 2. In **SQL Editor** → **New query**, paste the full contents of [`supabase/schema.sql`](supabase/schema.sql)
-   and click **Run**. The script is idempotent, so running it again is safe. To rename the team, update
+   and click **Run**. The script is idempotent: re-run it after pulling schema changes. To rename the team, update
    the `team` row.
 3. Copy `.env.example` to `.env.local` and fill in the **Project URL** and a **secret** key: either
    `sb_secret_…` or the legacy `service_role` key (Project Settings → API Keys). Do not use the
@@ -54,9 +54,12 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shad
   Your own response appears immediately (optimistic update).
 - **"Neatsakė" (no response)**: there is no player roster. It lists people who answered any
   event before but have not answered this one.
-- **Status**: `YES >= min` → 🟢 Susirenkam. `YES + MAYBE >= min` → 🟡 Trūksta žaidėjų
-  ("Trūksta dar X žaidėjų"). Otherwise → 🔴 Nesusirenkam.
-- **Home page cards**: each upcoming event shows its status, the missing-player count,
+- **Status** is based on YES responses only; there is no per-event threshold.
+  - Treniruotė: 0 → 🔴 Dar nėra patvirtinimų, 1–4 → ⚠️ Kol kas tik X patvirtinimai,
+    5+ → 🟢 Pakankamai patvirtinimų.
+  - Varžybos (5 players required): <5 → 🔴 Nepakanka žaidėjų varžyboms ("Trūksta dar X žaidėjų"),
+    5 → 🟡 Minimali sudėtis surinkta, 6+ → 🟢 Pakanka žaidėjų varžyboms.
+- **Home page cards**: each upcoming event shows its status,
   ✅/❓/❌/⏳ totals, your own answer (for example "✅ Tu dalyvausi" or "⏳ Neatsakei") and one-tap
   ✅/❓/❌ buttons that update instantly. Names appear only on the event page.
 - **Admin mode**: opening `/admin` sets `kasbus.admin=1` in that browser's localStorage. Event

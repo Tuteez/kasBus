@@ -12,7 +12,7 @@ if (!url || !key) {
 
 const TABLES = {
   team: "id,name",
-  events: "id,title,type,date_time,location,minimum_players,notes,created_at",
+  events: "id,title,type,date_time,location,notes,created_at",
   attendance: "id,event_id,player_name,player_key,response,updated_at",
 };
 

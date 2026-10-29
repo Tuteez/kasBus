@@ -19,12 +19,12 @@ import {
   applyAttendanceChange,
   findResponse,
   playerKey,
-  playersGenitive,
+  calculateStatus,
   summarizeAttendance,
   type AttendanceChange,
 } from "@/lib/attendance";
 import { STATUS_STYLES } from "@/lib/status";
-import type { Attendance, AttendanceResponse } from "@/lib/types";
+import type { Attendance, AttendanceResponse, EventType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const RESPONSE_BUTTONS: { value: AttendanceResponse; label: string; active: string }[] = [
@@ -35,12 +35,12 @@ const RESPONSE_BUTTONS: { value: AttendanceResponse; label: string; active: stri
 
 export function AttendancePanel({
   eventId,
-  minimumPlayers,
+  eventType,
   attendance,
   knownPlayers,
 }: {
   eventId: string;
-  minimumPlayers: number;
+  eventType: EventType;
   attendance: Attendance[];
   knownPlayers: string[];
 }) {
@@ -58,7 +58,7 @@ export function AttendancePanel({
 
   useAutoRefresh();
 
-  const summary = summarizeAttendance(optimisticAttendance, knownPlayers, minimumPlayers);
+  const summary = summarizeAttendance(optimisticAttendance, knownPlayers);
   const myKey = playerName ? playerKey(playerName) : null;
   const myResponse = findResponse(optimisticAttendance, playerName);
 
@@ -86,7 +86,7 @@ export function AttendancePanel({
     });
   }
 
-  const status = STATUS_STYLES[summary.status];
+  const status = calculateStatus(eventType, summary.names.YES.length);
 
   return (
     <div className="flex flex-col gap-5">
@@ -138,13 +138,9 @@ export function AttendancePanel({
         </CardContent>
       </Card>
 
-      <div className={cn("rounded-xl border px-4 py-4 text-center", status.banner)} aria-live="polite">
+      <div className={cn("rounded-xl border px-4 py-4 text-center", STATUS_STYLES[status.tone].banner)} aria-live="polite">
         <p className="text-xl font-bold">{status.label}</p>
-        {summary.status === "SHORT" && (
-          <p className="mt-1 text-base">
-            Trūksta dar {summary.missingPlayers} {playersGenitive(summary.missingPlayers)}
-          </p>
-        )}
+        {status.hint && <p className="mt-1 text-base">{status.hint}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

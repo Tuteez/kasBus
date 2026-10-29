@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Clock, MapPin, StickyNote, Users } from "lucide-react";
+import { CalendarDays, Clock, MapPin, StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { AttendancePanel } from "@/components/attendance-panel";
@@ -59,9 +59,6 @@ export default async function EventPage({ params }: Props) {
                 {event.location}
               </a>
             </DetailRow>
-            <DetailRow icon={<Users />} label="Minimalus žaidėjų skaičius">
-              {event.minimumPlayers}
-            </DetailRow>
             {event.notes && (
               <DetailRow icon={<StickyNote />} label="Pastabos">
                 <span className="whitespace-pre-wrap">{event.notes}</span>
@@ -73,7 +70,7 @@ export default async function EventPage({ params }: Props) {
 
       <AttendancePanel
         eventId={event.id}
-        minimumPlayers={event.minimumPlayers}
+        eventType={event.type}
         attendance={attendance}
         knownPlayers={knownPlayers}
       />

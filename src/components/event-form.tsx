@@ -16,7 +16,6 @@ export type EventFormValues = {
   /** "YYYY-MM-DDTHH:mm" in team time zone. */
   dateTimeLocal: string;
   location: string;
-  minimumPlayers: number;
   notes: string;
 };
 
@@ -83,21 +82,6 @@ export function EventForm({
           maxLength={200}
           placeholder="Pvz., Žalgirio arena, 2 aikštė"
           defaultValue={defaultValues?.location}
-          className="h-12 text-base"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="minimumPlayers">Minimalus žaidėjų skaičius</Label>
-        <Input
-          id="minimumPlayers"
-          name="minimumPlayers"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={100}
-          required
-          defaultValue={defaultValues?.minimumPlayers ?? 8}
           className="h-12 text-base"
         />
       </div>

@@ -20,7 +20,6 @@ export type TeamEvent = {
   type: EventType;
   dateTime: string;
   location: string;
-  minimumPlayers: number;
   notes: string | null;
 };
 

@@ -22,10 +22,12 @@ create table if not exists public.events (
   type text not null check (type in ('TRAINING', 'GAME')),
   date_time timestamptz not null,
   location text not null check (char_length(location) between 1 and 200),
-  minimum_players integer not null check (minimum_players between 1 and 100),
   notes text check (notes is null or char_length(notes) <= 2000),
   created_at timestamptz not null default now()
 );
+
+-- Status rules are built in (5 players), so the old per-event threshold is gone.
+alter table public.events drop column if exists minimum_players;
 
 create index if not exists events_date_time_idx on public.events (date_time);
 

@@ -1,12 +1,8 @@
-import type { Attendance, AttendanceResponse } from "./types";
-
-export type EventStatus = "GOING" | "SHORT" | "CANCELLED";
+import type { Attendance, AttendanceResponse, EventType } from "./types";
 
 export type AttendanceSummary = {
   names: Record<AttendanceResponse, string[]>;
   noResponse: string[];
-  status: EventStatus;
-  missingPlayers: number;
 };
 
 export function normalizePlayerName(name: string): string {
@@ -17,15 +13,49 @@ export function playerKey(name: string): string {
   return normalizePlayerName(name).toLowerCase();
 }
 
-export function calculateStatus(
-  yes: number,
-  maybe: number,
-  minimumPlayers: number,
-): { status: EventStatus; missingPlayers: number } {
-  const missingPlayers = Math.max(0, minimumPlayers - yes);
-  if (yes >= minimumPlayers) return { status: "GOING", missingPlayers };
-  if (yes + maybe >= minimumPlayers) return { status: "SHORT", missingPlayers };
-  return { status: "CANCELLED", missingPlayers };
+/** Every event needs at least this many YES responses; games also require exactly this many on court. */
+export const REQUIRED_PLAYERS = 5;
+
+export type StatusTone = "green" | "yellow" | "orange" | "red";
+
+export type EventStatus = {
+  tone: StatusTone;
+  label: string;
+  /** Extra line under the label, e.g. how many players a game still needs. */
+  hint: string | null;
+};
+
+/** Lithuanian noun form by count: 1/21 → one, 2–9/22–29 → few, 0/10–20 → many. */
+function pluralLt(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && (mod100 < 10 || mod100 > 20)) return few;
+  return many;
+}
+
+export function calculateStatus(type: EventType, yes: number): EventStatus {
+  if (type === "GAME") {
+    if (yes < REQUIRED_PLAYERS) {
+      const missing = REQUIRED_PLAYERS - yes;
+      return {
+        tone: "red",
+        label: "🔴 Nepakanka žaidėjų varžyboms",
+        hint: `Trūksta dar ${missing} ${playersGenitive(missing)}`,
+      };
+    }
+    if (yes === REQUIRED_PLAYERS) return { tone: "yellow", label: "🟡 Minimali sudėtis surinkta", hint: null };
+    return { tone: "green", label: "🟢 Pakanka žaidėjų varžyboms", hint: null };
+  }
+  if (yes === 0) return { tone: "red", label: "🔴 Dar nėra patvirtinimų", hint: null };
+  if (yes < REQUIRED_PLAYERS) {
+    return {
+      tone: "orange",
+      label: `⚠️ Kol kas tik ${yes} ${pluralLt(yes, "patvirtinimas", "patvirtinimai", "patvirtinimų")}`,
+      hint: null,
+    };
+  }
+  return { tone: "green", label: "🟢 Pakankamai patvirtinimų", hint: null };
 }
 
 /**
@@ -36,7 +66,6 @@ export function calculateStatus(
 export function summarizeAttendance(
   attendance: Attendance[],
   knownPlayers: string[],
-  minimumPlayers: number,
 ): AttendanceSummary {
   const names: Record<AttendanceResponse, string[]> = { YES: [], MAYBE: [], NO: [] };
   const responded = new Set<string>();
@@ -54,11 +83,7 @@ export function summarizeAttendance(
   }
   const noResponse = [...noResponseByKey.values()].sort((a, b) => a.localeCompare(b, "lt"));
 
-  return {
-    names,
-    noResponse,
-    ...calculateStatus(names.YES.length, names.MAYBE.length, minimumPlayers),
-  };
+  return { names, noResponse };
 }
 
 /** Replaces (or adds) one player's response; used for optimistic UI updates. */

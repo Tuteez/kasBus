@@ -10,7 +10,6 @@ type EventRow = {
   type: EventType;
   date_time: string;
   location: string;
-  minimum_players: number;
   notes: string | null;
 };
 
@@ -22,7 +21,7 @@ type AttendanceRow = {
   updated_at: string;
 };
 
-const EVENT_COLUMNS = "id,title,type,date_time,location,minimum_players,notes";
+const EVENT_COLUMNS = "id,title,type,date_time,location,notes";
 
 function toEvent(row: EventRow): TeamEvent {
   return {
@@ -31,7 +30,6 @@ function toEvent(row: EventRow): TeamEvent {
     type: row.type,
     dateTime: row.date_time,
     location: row.location,
-    minimumPlayers: row.minimum_players,
     notes: row.notes,
   };
 }
@@ -54,7 +52,6 @@ function toRow(input: EventInput) {
     type: input.type,
     date_time: input.dateTime,
     location: input.location,
-    minimum_players: input.minimumPlayers,
     notes: input.notes,
   };
 }

@@ -10,7 +10,7 @@ import { NameForm, PLAYER_NAME_INPUT_ID } from "@/components/name-form";
 import { setAttendanceAction } from "@/app/actions";
 import { useAutoRefresh } from "@/hooks/use-auto-refresh";
 import { usePlayerName } from "@/hooks/use-player-name";
-import { applyResponse, findResponse, playersGenitive, summarizeAttendance } from "@/lib/attendance";
+import { applyResponse, calculateStatus, findResponse, summarizeAttendance } from "@/lib/attendance";
 import { STATUS_STYLES } from "@/lib/status";
 import { formatShortDate, formatTime } from "@/lib/time";
 import { EVENT_TYPE_LABELS, type Attendance, type AttendanceResponse, type TeamEvent } from "@/lib/types";
@@ -103,8 +103,9 @@ function HomeEventCard({
       playerName ? applyResponse(current, event.id, playerName, response) : current,
   );
 
-  const summary = summarizeAttendance(optimisticAttendance, knownPlayers, event.minimumPlayers);
-  const status = STATUS_STYLES[summary.status];
+  const summary = summarizeAttendance(optimisticAttendance, knownPlayers);
+  const status = calculateStatus(event.type, summary.names.YES.length);
+  const statusStyle = STATUS_STYLES[status.tone];
   const myResponse = findResponse(optimisticAttendance, playerName);
   const mine = MY_RESPONSE_LABELS[myResponse ?? "NONE"];
   const eventHref = `/event/${event.id}`;
@@ -125,7 +126,7 @@ function HomeEventCard({
   }
 
   return (
-    <Card className={cn("gap-0 border-l-4 py-0", status.accent)}>
+    <Card className={cn("gap-0 border-l-4 py-0", statusStyle.accent)}>
       <CardContent className="flex flex-col gap-3 px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg leading-tight font-semibold">
@@ -139,15 +140,11 @@ function HomeEventCard({
         <div
           className={cn(
             "flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-lg border px-3 py-2",
-            status.banner,
+            statusStyle.banner,
           )}
         >
           <span className="text-base font-bold">{status.label}</span>
-          <span className="text-sm">
-            {summary.status === "GOING"
-              ? `${summary.names.YES.length} iš ${event.minimumPlayers} reikalingų`
-              : `Trūksta dar ${summary.missingPlayers} ${playersGenitive(summary.missingPlayers)}`}
-          </span>
+          {status.hint && <span className="text-sm">{status.hint}</span>}
         </div>
 
         <dl className="grid grid-cols-4 gap-2 text-center">

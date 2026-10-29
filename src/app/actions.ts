@@ -14,7 +14,6 @@ function parseEventForm(formData: FormData): data.EventInput | string {
   const type = String(formData.get("type") ?? "");
   const dateTimeLocal = String(formData.get("dateTime") ?? "");
   const location = String(formData.get("location") ?? "").trim();
-  const minimumPlayers = Number(formData.get("minimumPlayers"));
   const notes = String(formData.get("notes") ?? "").trim();
 
   if (!title) return "Įveskite pavadinimą.";
@@ -24,12 +23,9 @@ function parseEventForm(formData: FormData): data.EventInput | string {
   if (!dateTime) return "Nurodykite datą ir laiką.";
   if (!location) return "Įveskite vietą.";
   if (location.length > 200) return "Vietos pavadinimas per ilgas.";
-  if (!Number.isInteger(minimumPlayers) || minimumPlayers < 1 || minimumPlayers > 100) {
-    return "Minimalus žaidėjų skaičius turi būti nuo 1 iki 100.";
-  }
   if (notes.length > 2000) return "Pastabos per ilgos (daugiausia 2000 simbolių).";
 
-  return { title, type: type as EventType, dateTime, location, minimumPlayers, notes: notes || null };
+  return { title, type: type as EventType, dateTime, location, notes: notes || null };
 }
 
 export async function createEventAction(_prev: FormState, formData: FormData): Promise<FormState> {
