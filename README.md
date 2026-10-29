@@ -24,10 +24,14 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shad
 ## Setup
 
 1. Create a Supabase project.
-2. In **SQL Editor**, run [`supabase/schema.sql`](supabase/schema.sql). To rename the team, update the `team` row.
-3. Copy `.env.example` to `.env.local` and fill in **Project URL** and the **service_role** key
-   (Project Settings → API).
-4. Run locally:
+2. In **SQL Editor** → **New query**, paste the full contents of [`supabase/schema.sql`](supabase/schema.sql)
+   and click **Run**. The script is idempotent, so running it again is safe. To rename the team, update
+   the `team` row.
+3. Copy `.env.example` to `.env.local` and fill in the **Project URL** and a **secret** key: either
+   `sb_secret_…` or the legacy `service_role` key (Project Settings → API Keys). Do not use the
+   publishable/anon key.
+4. Verify the database with `npm run db:check`. It should print `✓` for `team`, `events` and `attendance`.
+5. Run locally:
 
    ```bash
    npm install
