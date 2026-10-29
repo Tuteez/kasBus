@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# kasBus 🏀
 
-## Getting Started
+A minimal attendance page for one amateur basketball team. It replaces "+" messages in Messenger.
+The admin creates a practice or game and posts the link in the group chat. Players open the link,
+enter a name once (saved in `localStorage`) and respond with **Dalyvausiu / Galbūt / Nedalyvausiu**.
+Everyone sees the live counts, the name lists and the event status.
 
-First, run the development server:
+The UI is in Lithuanian. There is no login, no accounts and no roles, by design.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Stack
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Next.js 15 (App Router, Server Actions) · TypeScript · Tailwind CSS v4 · shadcn/ui · Supabase (PostgreSQL) · Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Purpose |
+| --- | --- |
+| `/` | Upcoming events |
+| `/event/[id]` | Public event page with attendance |
+| `/admin` | Event list with copy link, edit and delete |
+| `/admin/new` | Create event |
+| `/admin/[id]/edit` | Edit event |
 
-## Learn More
+## Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Create a Supabase project.
+2. In **SQL Editor**, run [`supabase/schema.sql`](supabase/schema.sql). To rename the team, update the `team` row.
+3. Copy `.env.example` to `.env.local` and fill in **Project URL** and the **service_role** key
+   (Project Settings → API).
+4. Run locally:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to Vercel
 
-## Deploy on Vercel
+1. Push the repository to GitHub and import it in Vercel.
+2. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as environment variables.
+3. Deploy.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## How it works
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Data access**: only the Next.js server talks to Supabase, using the service role key. RLS is
+  enabled with no policies, so the database cannot be reached directly from the browser.
+- **Attendance**: one row per `(event, player name)`, matched case-insensitively. A new response
+  overwrites the previous one.
+- **Live updates**: the event page refreshes every 10 seconds and whenever the tab becomes visible.
+  Your own response appears immediately (optimistic update).
+- **"Neatsakė" (no response)**: there is no player roster. It lists people who answered any
+  event before but have not answered this one.
+- **Status**: `YES >= min` → 🟢 Susirenkam. `YES + MAYBE >= min` → 🟡 Trūksta žaidėjų
+  ("Trūksta dar X žaidėjų"). Otherwise → 🔴 Nesusirenkam.
+- **Time zone**: all dates are entered and shown in `Europe/Vilnius`.
+
+## Known MVP limitations
+
+- `/admin` is **not protected**. Anyone who knows the URL can create, edit or delete events.
+  This follows the "no authentication" MVP requirement.
+- Players are identified only by the name they type. Anyone can answer under any name.
+- If a player changes their name, their earlier responses stay under the old name.

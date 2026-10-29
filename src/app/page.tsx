@@ -1,103 +1,80 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { getTeam, listEvents } from "@/lib/data";
+import { formatShortDate, formatTime } from "@/lib/time";
+import { EVENT_TYPE_LABELS, type TeamEvent } from "@/lib/types";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Artėjantys įvykiai" };
+
+// Keep events visible for a few hours after start so late responders can still find them.
+const RECENT_WINDOW_MS = 3 * 60 * 60 * 1000;
+
+export default async function HomePage() {
+  const from = new Date(Date.now() - RECENT_WINDOW_MS).toISOString();
+  const [team, events] = await Promise.all([getTeam(), listEvents({ from })]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex flex-col gap-6">
+      <header>
+        <p className="text-sm font-medium text-orange-600">🏀 {team?.name ?? "kasBus"}</p>
+        <h1 className="text-2xl font-bold tracking-tight">Artėjantys įvykiai</h1>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      {events.length === 0 ? (
+        <Card>
+          <CardContent className="py-6 text-center text-muted-foreground">
+            Artėjančių treniruočių ar varžybų nėra.
+          </CardContent>
+        </Card>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {events.map((event) => (
+            <li key={event.id}>
+              <EventLinkCard event={event} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <footer className="pt-4 text-center">
+        <Link href="/admin" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+          Administravimas
+        </Link>
       </footer>
     </div>
+  );
+}
+
+function EventLinkCard({ event }: { event: TeamEvent }) {
+  return (
+    <Link href={`/event/${event.id}`} className="block rounded-xl active:scale-[0.99]">
+      <Card className="transition-colors hover:bg-muted/60">
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-lg leading-tight font-semibold">{event.title}</h2>
+            <Badge variant={event.type === "GAME" ? "default" : "secondary"}>{EVENT_TYPE_LABELS[event.type]}</Badge>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="size-4" />
+              {formatShortDate(event.dateTime)}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-4" />
+              {formatTime(event.dateTime)}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="size-4" />
+              {event.location}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
